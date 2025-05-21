@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AnimatePresence } from "framer-motion";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Polymaze - Robotics Competition",
-  description: "Design and build a robot to conquer a complex maze filled with tricky paths and surprise turns.",
+  description:
+    "Design and build a robot to conquer a complex maze filled with tricky paths and surprise turns.",
 };
 
 export default function RootLayout({
@@ -28,9 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AnimatePresence mode="wait">
-          {children}
-        </AnimatePresence>
+        {children}
       </body>
     </html>
   );

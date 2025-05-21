@@ -1,11 +1,11 @@
 import Navbar from "../components/navbar";
-import Homepage from "./content";
+import Content from "./content";
 
-export default function Home() {
+export default function Register() {
   return (
     <div>
       <Navbar />
-      <Homepage />
+      <Content />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Content from "../polymaze/content";
 
 export default function Homepage() {
   return (
