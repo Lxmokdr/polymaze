@@ -9,27 +9,113 @@ import ProgressBar from "@/components/ProgressBar";
 // import { Input } from "@/components/ui/input";
 import RadioButton from "./RadioButton";
 import JoinTeam from "./JoinTeam";
+import { supabase } from "../../lib/supabaseClient";
+
 import { MemberInformationsDetails } from "./MemberInformationsDetails";
+import FormInput from "@/components/FormInput";
+import { dataRegistrationProps } from "@/utils/validation";
+import { PostgrestError } from "@supabase/supabase-js";
 
 export default function Content() {
   const [step, setStep] = useState(0);
   const [teamType, setTeamType] = useState("solo");
   const [teamAction, setTeamAction] = useState("create");
+  const [error, setError] = useState("kjkjk");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     teamAction: "create",
     teamId: "",
     teamName: "",
     teamMembers: "solo",
     membersCount: 1,
-    // Add team member fields dynamically
-    // Other fields
     email: "",
-    fullName: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     wilaya: "",
     dob: "",
   });
 
+  // interface dataRegistrationProps {
+  //   teamAction: string;
+  //   teamId: string;
+  //   teamName: string;
+  //   teamMembers: string;
+  //   membersCount: number;
+  //   email: string;
+  //   firstName: string;
+  //   lastName: string;
+  //   phone: string;
+  //   wilaya: string;
+  //   dob: string;
+  // }
+
+  const storeTeamRegistration = async (formData: dataRegistrationProps) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("teams")
+        .insert([
+          {
+            name: formData.teamName,
+            is_solo: formData.teamMembers === "solo",
+          },
+        ])
+        .select("id");
+
+      if (data) {
+        await supabase
+          .from("participants")
+          .insert([
+            {
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              birth_date: formData.dob,
+              email: formData.email,
+              phone_number: formData.phone,
+              wilaya: formData.wilaya,
+              team_id: data[0].id as string,
+            },
+          ])
+          .select();
+      }
+
+      if (error) {
+        setError(
+          `An error occurred while registering the team, please try again`
+        );
+      }
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      setError(`An error occurred while registering the team: ${error}.`);
+    }
+  };
+
+  const storeMemberRegistration = async (formData: dataRegistrationProps) => {
+    try {
+      setIsLoading(true);
+      await supabase
+        .from("participants")
+        .insert([
+          {
+            first_name: formData.teamName,
+            last_name: formData.teamMembers === "solo",
+            birth_date: formData.dob,
+            email: formData.email,
+            phone_number: formData.phone,
+            wilaya: formData.wilaya,
+            team_id: formData.teamId,
+          },
+        ])
+        .select();
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+      setError(`An error occurred while registering the member: ${error}.`);
+    }
+  };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -54,11 +140,15 @@ export default function Content() {
     setStep(step - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission
     console.log(formData);
-    // You can add API call here
+    if (teamAction === "create") {
+      await storeTeamRegistration(formData);
+    } else {
+      await storeMemberRegistration(formData);
+    }
   };
 
   return (
@@ -73,8 +163,7 @@ export default function Content() {
           priority
         />
       </div>
-
-      {/* Content */}
+      {isLoading && <h1 style={{ color: "red" }}>{"brrrr"}</h1>} {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-start pt-24 px-4 w-full">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
@@ -120,12 +209,23 @@ export default function Content() {
               Sign up now and let your robotic journey begin!
             </p>
           </Step>
-
           {/* Step 1: Team Information */}
           <Step
             isActive={step === 1}
             stepNumber={1}
-            onNext={nextStep}
+            onNext={() => {
+              if (teamAction === "create" && formData.teamName.trim() === "") {
+                setError("Team Name is required.");
+              } else {
+                if (teamAction === "join" && formData.teamId.trim() === "") {
+                  setError("Team ID is required.");
+                } else {
+                  setError("");
+                  nextStep();
+                }
+                // nextStep(
+              }
+            }}
             onPrevious={prevStep}
           >
             <h2 className="text-2xl font-bold text-white mb-6">
@@ -200,14 +300,15 @@ export default function Content() {
                   >
                     Team Name <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <FormInput
                     type="text"
+                    label="Team Name"
                     id="teamName"
                     name="teamName"
                     value={formData.teamName}
                     onChange={handleInputChange}
                     placeholder="Enter your team name"
-                    required
+                    required={teamAction === "create" ? true : false}
                     className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -218,7 +319,6 @@ export default function Content() {
               <JoinTeam teamId={formData.teamId} onChange={handleInputChange} />
             )}
           </Step>
-
           {/* Step 2: Additional Details */}
           <Step
             isActive={step === 2}
@@ -231,6 +331,7 @@ export default function Content() {
               handleInputChange={handleInputChange}
             />
           </Step>
+          {error && <h1 style={{ color: "red" }}>{error}</h1>}{" "}
         </motion.form>
       </div>
     </div>

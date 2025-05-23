@@ -10,7 +10,8 @@ export interface MemberInformationsDetailsProps {
     teamMembers: string;
     membersCount: number;
     email: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     phone: string;
     wilaya: string;
     dob: string;
@@ -27,12 +28,22 @@ export function MemberInformationsDetails({
       <h2 className="text-2xl font-bold text-white mb-6">Personal Details</h2>
 
       <FormInput
-        id="fullName"
-        name="fullName"
-        label="Full Name"
-        value={formData.fullName}
+        id="firstName"
+        name="firstName"
+        label="First Name"
+        value={formData.firstName}
         onChange={handleInputChange}
-        placeholder="Enter your full name"
+        placeholder="Enter your first name"
+        required
+      />
+
+      <FormInput
+        id="lastName"
+        name="lastName"
+        label="Last Name"
+        value={formData.lastName}
+        onChange={handleInputChange}
+        placeholder="Enter your last name"
         required
       />
 
